@@ -52,7 +52,17 @@ let remainingTime;
 let timeLimitSeconds = DEFAULT_TIME_LIMIT_SECONDS;
 
 function randomLevel() {
-  return Math.floor(Math.random() * 5);
+  // Common screws appear from the dropper with a weighted distribution.
+  // M12 and above are reserved for combinations (debug buttons can still
+  // spawn every size for testing).
+  const weights = [36, 24, 15, 10, 7, 5, 3];
+  const total = weights.reduce((sum, weight) => sum + weight, 0);
+  let roll = Math.random() * total;
+  for (let level = 0; level < weights.length; level += 1) {
+    roll -= weights[level];
+    if (roll < 0) return level;
+  }
+  return weights.length - 1;
 }
 
 function resetGame() {
