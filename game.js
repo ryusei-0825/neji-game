@@ -239,6 +239,12 @@ function resolvePair(a, b) {
     a.vy -= frictionImpulse * ty;
     b.vx += frictionImpulse * tx;
     b.vy += frictionImpulse * ty;
+
+    // Give a contacting screw a small, bounded roll. The kick is deliberately
+    // tiny because this function runs through several solver passes per frame.
+    const spinKick = clamp(tangentVelocity * 0.0008, -0.012, 0.012);
+    a.angularVelocity = clamp(a.angularVelocity + spinKick, -0.045, 0.045);
+    b.angularVelocity = clamp(b.angularVelocity - spinKick, -0.045, 0.045);
   }
 
 }
