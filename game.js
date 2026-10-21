@@ -210,14 +210,15 @@ function resolvePair(a, b) {
   }
 
   const overlap = minDistance - distance;
+  const correction = overlap * 0.72;
   const totalRadius = aRadius + bRadius;
   const aShare = bRadius / totalRadius;
   const bShare = aRadius / totalRadius;
 
-  a.x -= nx * overlap * aShare;
-  a.y -= ny * overlap * aShare;
-  b.x += nx * overlap * bShare;
-  b.y += ny * overlap * bShare;
+  a.x -= nx * correction * aShare;
+  a.y -= ny * correction * aShare;
+  b.x += nx * correction * bShare;
+  b.y += ny * correction * bShare;
 
   const relativeVelocity = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
   if (relativeVelocity <= 0) {
@@ -226,19 +227,19 @@ function resolvePair(a, b) {
     a.vy -= impulse * ny;
     b.vx += impulse * nx;
     b.vy += impulse * ny;
+    // Apply contact friction only while the screws are moving into each
+    // other. Applying it while separating caused repeated collision passes
+    // to inject a visible sideways wobble.
+    const tx = -ny;
+    const ty = nx;
+    const tangentVelocity = (b.vx - a.vx) * tx + (b.vy - a.vy) * ty;
+    const frictionLimit = impulse * 0.24;
+    const frictionImpulse = clamp(-tangentVelocity * 0.08, -frictionLimit, frictionLimit);
+    a.vx -= frictionImpulse * tx;
+    a.vy -= frictionImpulse * ty;
+    b.vx += frictionImpulse * tx;
+    b.vy += frictionImpulse * ty;
   }
-
-  // Screw heads and shafts should have some contact friction. Without it,
-  // the directional support shape lets one screw slide unrealistically along
-  // another and fall straight through a stack.
-  const tx = -ny;
-  const ty = nx;
-  const tangentVelocity = (b.vx - a.vx) * tx + (b.vy - a.vy) * ty;
-  const frictionImpulse = clamp(-tangentVelocity * 0.16, -0.7, 0.7);
-  a.vx -= frictionImpulse * tx;
-  a.vy -= frictionImpulse * ty;
-  b.vx += frictionImpulse * tx;
-  b.vy += frictionImpulse * ty;
 
 }
 
