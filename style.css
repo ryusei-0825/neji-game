@@ -1,4 +1,5 @@
 :root {
+  --board-ratio: 0.65625;
   color-scheme: light;
   font-family: "Arial Rounded MT Bold", "Hiragino Maru Gothic ProN", "Yu Gothic", "Segoe UI", system-ui, sans-serif;
   background: #94dff2;
@@ -276,7 +277,7 @@ button {
 }
 
 .board-shell {
-  aspect-ratio: 420 / 640;
+  aspect-ratio: var(--board-ratio);
   background: #eee3c4;
   border: 7px solid #70401c;
   border-radius: 8px;
@@ -414,6 +415,10 @@ button {
 
 /* Keep the complete board inside short tablet and mobile viewports. */
 @media (max-height: 900px) {
+  .game-wrap {
+    --board-height: min(640px, calc(100dvh - 330px));
+  }
+
   .shell {
     align-items: flex-start;
     height: 100dvh;
@@ -430,17 +435,28 @@ button {
   }
 
   .board-shell {
-    aspect-ratio: auto;
-    flex: 1 1 auto;
-    height: auto;
+    aspect-ratio: var(--board-ratio);
+    flex: 0 0 var(--board-height);
+    height: var(--board-height);
     margin-inline: auto;
-    max-height: calc(100dvh - 330px);
     min-height: 0;
-    width: min(100%, calc((100dvh - 330px) * 0.65625));
+    width: min(100%, calc(var(--board-height) * var(--board-ratio)));
   }
 
   .fruit-line {
     flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 430px) {
+  :root {
+    --board-ratio: 0.6;
+  }
+}
+
+@media (min-width: 431px) and (max-width: 900px) {
+  :root {
+    --board-ratio: 0.7142857;
   }
 }
 
