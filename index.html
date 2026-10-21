@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ねじゲーム</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <div class="sky" aria-hidden="true">
+        <span class="cloud cloud-a"></span>
+        <span class="cloud cloud-b"></span>
+        <span class="cloud cloud-c"></span>
+      </div>
+      <section class="game-wrap" aria-label="Suika Drop game">
+        <header class="marquee">
+          <h1>ねじゲーム</h1>
+        </header>
+        <div class="topbar">
+          <div class="score-board">
+            <p class="label">スコア</p>
+            <p id="score" class="score">0</p>
+          </div>
+          <div class="timer-board">
+            <p class="label">残り時間</p>
+            <p id="timer" class="timer">5:00</p>
+          </div>
+          <div class="next">
+            <p class="label">つぎ</p>
+            <canvas id="nextCanvas" width="92" height="92" aria-hidden="true"></canvas>
+          </div>
+          <button id="restartButton" type="button" title="リスタート">↻</button>
+        </div>
+        <div class="debug-panel" aria-label="デバッグ用ねじ選択">
+          <p class="label">デバッグ</p>
+          <div class="time-debug">
+            <span class="time-debug-label">制限時間</span>
+            <select id="timeLimitSelect" aria-label="制限時間">
+              <option value="30">30秒</option>
+              <option value="60">1分</option>
+              <option value="300" selected>5分</option>
+              <option value="600">10分</option>
+            </select>
+            <button id="applyTimeButton" type="button">設定してリスタート</button>
+          </div>
+          <div id="debugButtons" class="debug-buttons"></div>
+        </div>
+
+        <div class="board-shell">
+          <canvas id="gameCanvas" width="420" height="640"></canvas>
+          <div id="overlay" class="overlay hidden">
+            <div class="overlay-panel">
+              <p class="label">Game Over</p>
+              <p id="finalScore" class="final-score">0</p>
+              <button id="playAgainButton" type="button">もう一度</button>
+            </div>
+          </div>
+        </div>
+        <div class="fruit-line" aria-hidden="true">
+          <span>＋</span><span>−</span><span>◇</span><span>六</span><span>＋</span><span>−</span><span>◇</span><span>六</span><span>◎</span>
+        </div>
+      </section>
+    </main>
+
+    <script src="game.js"></script>
+  </body>
+</html>
