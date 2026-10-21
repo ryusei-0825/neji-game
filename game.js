@@ -134,7 +134,7 @@ function update(delta) {
     fruit.born = Math.max(0, fruit.born - delta);
     fruit.mergeTimer = Math.max(0, fruit.mergeTimer - delta);
     updateLineTimer(fruit, delta);
-    resolveWall(fruit);
+    resolveWall(fruit, true);
   }
 
   for (let iteration = 0; iteration < 8; iteration += 1) {
@@ -148,7 +148,7 @@ function update(delta) {
   // Pair separation can push a screw back through the floor. Clamp the
   // final positions again after all contacts have been resolved.
   for (const fruit of fruits) {
-    resolveWall(fruit);
+    resolveWall(fruit, false);
   }
 
   // Floor correction can change the contact normal, so settle pairs once more.
@@ -160,13 +160,13 @@ function update(delta) {
     }
   }
   for (const fruit of fruits) {
-    resolveWall(fruit);
+    resolveWall(fruit, false);
   }
 
   checkGameOver();
 }
 
-function resolveWall(fruit) {
+function resolveWall(fruit, applyRolling = false) {
   const leftSupport = screwSupportRadius(fruit, -1, 0);
   const rightSupport = screwSupportRadius(fruit, 1, 0);
   const bottomSupport = screwSupportRadius(fruit, 0, 1);
@@ -174,18 +174,20 @@ function resolveWall(fruit) {
   if (fruit.x - leftSupport < WALL) {
     fruit.x = WALL + leftSupport;
     fruit.vx = Math.abs(fruit.vx) * RESTITUTION;
-    fruit.angularVelocity += clamp(fruit.vy * 0.0015, -0.025, 0.025);
+    if (applyRolling) fruit.angularVelocity += clamp(fruit.vy * 0.0015, -0.025, 0.025);
   }
   if (fruit.x + rightSupport > WIDTH - WALL) {
     fruit.x = WIDTH - WALL - rightSupport;
     fruit.vx = -Math.abs(fruit.vx) * RESTITUTION;
-    fruit.angularVelocity -= clamp(fruit.vy * 0.0015, -0.025, 0.025);
+    if (applyRolling) fruit.angularVelocity -= clamp(fruit.vy * 0.0015, -0.025, 0.025);
   }
   if (fruit.y + bottomSupport > HEIGHT - WALL) {
     fruit.y = HEIGHT - WALL - bottomSupport;
     fruit.vy = -Math.abs(fruit.vy) * RESTITUTION;
-    fruit.angularVelocity += fruit.vx / Math.max(28, fruit.radius) * 0.045;
-    fruit.angularVelocity = clamp(fruit.angularVelocity, -0.045, 0.045);
+    if (applyRolling) {
+      fruit.angularVelocity += fruit.vx / Math.max(28, fruit.radius) * 0.045;
+      fruit.angularVelocity = clamp(fruit.angularVelocity, -0.045, 0.045);
+    }
     fruit.vx *= 0.94;
   }
 }
@@ -218,19 +220,26 @@ function resolvePair(a, b) {
   b.y += ny * overlap * bShare;
 
   const relativeVelocity = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
-  if (relativeVelocity > 0) return;
+  if (relativeVelocity <= 0) {
+    const impulse = -(1 + RESTITUTION) * relativeVelocity * 0.5;
+    a.vx -= impulse * nx;
+    a.vy -= impulse * ny;
+    b.vx += impulse * nx;
+    b.vy += impulse * ny;
+  }
 
-  const impulse = -(1 + RESTITUTION) * relativeVelocity * 0.5;
-  a.vx -= impulse * nx;
-  a.vy -= impulse * ny;
-  b.vx += impulse * nx;
-  b.vy += impulse * ny;
+  // Screw heads and shafts should have some contact friction. Without it,
+  // the directional support shape lets one screw slide unrealistically along
+  // another and fall straight through a stack.
+  const tx = -ny;
+  const ty = nx;
+  const tangentVelocity = (b.vx - a.vx) * tx + (b.vy - a.vy) * ty;
+  const frictionImpulse = clamp(-tangentVelocity * 0.16, -0.7, 0.7);
+  a.vx -= frictionImpulse * tx;
+  a.vy -= frictionImpulse * ty;
+  b.vx += frictionImpulse * tx;
+  b.vy += frictionImpulse * ty;
 
-  const tangentVelocity = (b.vx - a.vx) * -ny + (b.vy - a.vy) * nx;
-  const verticalContact = Math.abs(ny) > 0.55;
-  const spin = verticalContact ? clamp(tangentVelocity * 0.0035, -0.035, 0.035) : 0;
-  a.angularVelocity = clamp(a.angularVelocity - spin * bShare, -0.055, 0.055);
-  b.angularVelocity = clamp(b.angularVelocity + spin * aShare, -0.055, 0.055);
 }
 
 function canMerge(a, b) {
