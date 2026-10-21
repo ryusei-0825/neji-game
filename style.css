@@ -12,6 +12,7 @@
 body {
   margin: 0;
   min-height: 100vh;
+  min-height: 100dvh;
   background:
     linear-gradient(180deg, #8dd8ee 0%, #c8eef4 48%, #d8d2c5 49%, #b8aa93 100%);
   overflow: hidden;
@@ -28,6 +29,7 @@ button {
   display: flex;
   justify-content: center;
   min-height: 100vh;
+  min-height: 100dvh;
   padding: 14px;
   position: relative;
 }
@@ -407,6 +409,38 @@ button {
   .debug-buttons button {
     font-size: 11px;
     min-height: 26px;
+  }
+}
+
+/* Keep the complete board inside short tablet and mobile viewports. */
+@media (max-height: 900px) {
+  .shell {
+    align-items: flex-start;
+    height: 100dvh;
+    overflow: hidden;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    padding-top: max(8px, env(safe-area-inset-top));
+  }
+
+  .game-wrap {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .board-shell {
+    aspect-ratio: auto;
+    flex: 1 1 auto;
+    height: auto;
+    margin-inline: auto;
+    max-height: calc(100dvh - 330px);
+    min-height: 0;
+    width: min(100%, calc((100dvh - 330px) * 0.65625));
+  }
+
+  .fruit-line {
+    flex: 0 0 auto;
   }
 }
 
