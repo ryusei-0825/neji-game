@@ -89,6 +89,7 @@ function spawnFruit(levelOverride = currentLevel, isDebugSpawn = false) {
     vx: 0,
     vy: 1.5,
     radius: spec.radius,
+    mass: massForLevel(levelOverride),
     angle,
     angularVelocity: 0,
     born: 18,
@@ -212,8 +213,11 @@ function resolvePair(a, b) {
   const overlap = minDistance - distance;
   const correction = overlap * 0.72;
   const totalRadius = aRadius + bRadius;
-  const aShare = bRadius / totalRadius;
-  const bShare = aRadius / totalRadius;
+  const invMassA = 1 / a.mass;
+  const invMassB = 1 / b.mass;
+  const inverseMassTotal = invMassA + invMassB;
+  const aShare = invMassA / inverseMassTotal;
+  const bShare = invMassB / inverseMassTotal;
 
   a.x -= nx * correction * aShare;
   a.y -= ny * correction * aShare;
@@ -222,11 +226,11 @@ function resolvePair(a, b) {
 
   const relativeVelocity = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
   if (relativeVelocity <= 0) {
-    const impulse = -(1 + RESTITUTION) * relativeVelocity * 0.5;
-    a.vx -= impulse * nx;
-    a.vy -= impulse * ny;
-    b.vx += impulse * nx;
-    b.vy += impulse * ny;
+    const impulse = -(1 + RESTITUTION) * relativeVelocity / inverseMassTotal;
+    a.vx -= impulse * nx * invMassA;
+    a.vy -= impulse * ny * invMassA;
+    b.vx += impulse * nx * invMassB;
+    b.vy += impulse * ny * invMassB;
     // Apply contact friction only while the screws are moving into each
     // other. Applying it while separating caused repeated collision passes
     // to inject a visible sideways wobble.
@@ -271,6 +275,7 @@ function mergeFruits(a, b) {
     vx: (a.vx + b.vx) * 0.36,
     vy: (a.vy + b.vy) * 0.36 - 1.5,
     radius: spec.radius,
+    mass: massForLevel(level),
     angle: averageAngle(a.angle, b.angle),
     angularVelocity: (a.angularVelocity + b.angularVelocity) * 0.18,
     born: 14,
@@ -731,6 +736,11 @@ function averageAngle(a, b) {
 function nextFruitId() {
   fruitId += 1;
   return fruitId;
+}
+
+function massForLevel(level) {
+  // Small screws are dense; larger screws are lighter relative to their size.
+  return Math.max(0.42, 4.8 - level * 0.48);
 }
 
 function moveAim(event) {
